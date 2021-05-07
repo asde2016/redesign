@@ -1,4 +1,6 @@
 $(function(){
+    // 브라우저 정보
+    const agt = navigator.userAgent.toLowerCase();
     var _lang = getParameter("lang");
 
     // 이니셜라이즈
@@ -12,7 +14,7 @@ $(function(){
     // 새로고침시 첫번째 화면으로 이동
     setTimeout(function(){
         $("html").scrollTop(0);
-    }, 100);
+    }, 200);
 
     // 윈도우 resize 이벤트
     $(window).resize(function(){
@@ -113,27 +115,35 @@ $(function(){
         scrollAnimation(index);
     });
     // mobile touchmove 이벤트
-    let ts;
+    let txS;
+    let tyS;
     $("html").on("touchstart", function(e){
-        ts = e.originalEvent.touches[0].clientY;
+        txS = e.originalEvent.touches[0].clientX;
+        tyS = e.originalEvent.touches[0].clientY;
     });
     $("html").on("touchmove", function(e){
-        let te = e.originalEvent.touches[0].clientY;
-        
+        let txE = e.originalEvent.touches[0].clientX;
+        let tyE = e.originalEvent.touches[0].clientY;
         var scrollTop = $(window).scrollTop();
         var height = $(window).height();
 
-        if(te > ts) {
-            scrollTop -= height;
-        } else {
-            scrollTop += height;
+        let resultTsX = txS - txE > 0 ? txS - txE : -1 * (txS - txE);
+        let resultTsY = tyS - tyE > 0 ? tyS - tyE : -1 * (tyS - tyE);
+
+        // 좌우 스크롤시 animation 동작하지 않게하기위해 뒤에 조건 추가
+        if(resultTsY > resultTsX && (tyS - tyE < -100 || tyS - tyE > 100)) {
+            if(tyE > tyS) {
+                scrollTop -= height;
+            } else {
+                scrollTop += height;
+            }
+    
+            var index = Math.round(scrollTop < 0 ? 0 : scrollTop / height);
+    
+            if(index > $(".fixed_menu ul li:last-child").index()) return;
+    
+            scrollAnimation(index);
         }
-
-        var index = Math.round(scrollTop < 0 ? 0 : scrollTop / height);
-
-        if(index > $(".fixed_menu ul li:last-child").index()) return;
-
-        scrollAnimation(index);
     });
 
     // fixed menu 클릭 이벤트
@@ -244,7 +254,6 @@ $(function(){
     // 대관안내 data binding
     function changeRental(type, cont, group){
         cont.parent().parent().find($(".title span")).html(group);
-        console.log(cont.parent().parent());
         if(_lang == "en") {
             if(lang.hasOwnProperty(group)) {
                 group = lang[group]["ko"];
@@ -345,8 +354,16 @@ $(function(){
         }
     }
 
+    //아이폰 기종 100vh 높이 잡아주기, Safari어플에서 적용 안됌
+	function setDeviceHeight() {
+		if(agt.match(/iPhone/i)) {
+			$("#section .section_inner > div").height($(window).height());
+		}
+	}
+
     // 이니셜라이즈
     function init(){
+        setDeviceHeight();
         InitLanguagePack();
     }
 });
